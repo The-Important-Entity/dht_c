@@ -18,6 +18,7 @@ void freeHashTable(struct HashTable * table);
 void * get(struct HashTable * table, char * key);
 int insert(struct HashTable * table, char * key, char * value);
 int delete(struct HashTable * table, char * key);
+char * allBindings(struct HashTable * table);
 void printTable(struct HashTable * table);
 
 #endif

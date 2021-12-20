@@ -26,7 +26,7 @@ struct JobArguments {
     sem_t * jobs_sem;
 };
 
-void * getbinding(void * a){
+void * getBinding(void * a){
     struct JobArguments * args = (struct JobArguments *)a;
 
     char * str = (char *)get(args->table, args->key);
@@ -49,7 +49,22 @@ void * getbinding(void * a){
     pthread_exit(NULL);
 }
 
-void * insertbinding(void * a){
+void * getAllBindings(void * a) {
+    struct JobArguments * args = (struct JobArguments *)a;
+
+    char * str = allBindings(args->table);
+    if (send(args->client, str, strlen(str), 0) < 0) {
+        fprintf(stderr, "Error: Failed to send message to client %s\n", strerror(errno));
+    }
+    free(str);
+    sem_post(args->jobs_sem);
+    free(args->key);
+    free(args->value);
+    free(args);
+    pthread_exit(NULL);
+}
+
+void * insertBinding(void * a){
     struct JobArguments * args = (struct JobArguments *)a;
 
     int res = insert(args->table, args->key, args->value);
@@ -62,7 +77,7 @@ void * insertbinding(void * a){
     else {
         sprintf(response, "Success");
     }
-    if (send(args->client, response, VALUEMAX, 0) < 0) {
+    if (send(args->client, response, strlen(response), 0) < 0) {
         fprintf(stderr, "Error: Failed to send message to client %s\n", strerror(errno));
     }
     sem_post(args->jobs_sem);
@@ -70,7 +85,7 @@ void * insertbinding(void * a){
     pthread_exit(NULL);
 }
 
-void * deletebinding(void * a){
+void * deleteBinding(void * a){
     struct JobArguments * args = (struct JobArguments *)a;
 
     int res = delete(args->table, args->key);
@@ -81,7 +96,7 @@ void * deletebinding(void * a){
     } else {
         sprintf(response, "Success");
     }
-    if (send(args->client, response, VALUEMAX, 0) < 0) {
+    if (send(args->client, response, strlen(response), 0) < 0) {
         fprintf(stderr, "Error: Failed to send message to client %s\n", strerror(errno));
     }
     sem_post(args->jobs_sem);
@@ -95,12 +110,16 @@ void * errorInput(void * a) {
     struct JobArguments * args = (struct JobArguments *)a;
     char err[INPUTMAX];
     sprintf(err, "Error: Input");
-    if (send(args->client, err, INPUTMAX, 0) < 0) {
+    if (send(args->client, err, strlen(err), 0) < 0) {
         fprintf(stderr, "Error: Failed to send message to client %s\n", strerror(errno));
     }
     sem_post(args->jobs_sem);
-    free(args->key);
-    free(args->value);
+    if (args->key != NULL) {
+        free(args->key);
+    }
+    if (args->value != NULL) {
+        free(args->value);
+    }
     free(args);
     pthread_exit(NULL);
 }
@@ -123,34 +142,59 @@ insert: foo bar
 delete: foo
 */
 void jobFactory(char * args, int client, struct HashTable * table, sem_t * jobs_sem){
-    char * f = (char *)malloc(FMAX * sizeof(char)+1);
-    char * key = (char *)malloc(KEYMAX * sizeof(char)+1);
-    char * value = (char *)malloc(VALUEMAX * sizeof(char)+1);
+    fun_ptr retval = &errorInput;
+
+
+    char * f = NULL;
+    char * key = NULL;
+    char * value = NULL;
+
+    if ((f = (char *)malloc(FMAX * sizeof(char)+1)) == NULL) {
+        fprintf(stderr, "Error: Failed to malloc. %s.\n", strerror(errno));
+        goto EXIT;
+    }
+    if ((key = (char *)malloc(KEYMAX * sizeof(char)+1)) == NULL) {
+        fprintf(stderr, "Error: Failed to malloc. %s.\n", strerror(errno));
+        goto EXIT;
+    }
+    if ((value = (char *)malloc(VALUEMAX * sizeof(char)+1)) == NULL) {
+        fprintf(stderr, "Error: Failed to malloc. %s.\n", strerror(errno));
+        goto EXIT;
+    }
 
     int res = sscanf(args, "%s %s %s", f, key, value);
-    fun_ptr retval = &errorInput;
-    if (res < 0 || strlen(f) == 0 || strlen(key) == 0) {
+    if (res < 0 || strlen(f) == 0) {
+        goto EXIT;
+    }
+    if (strcmp(f, "getall") == 0){
+        retval = &getAllBindings;
+        goto EXIT;
+    }
+    if (strlen(key) == 0) {
         goto EXIT;
     }
     if (strcmp(f, "get") == 0) {
-        retval = &getbinding;
+        retval = &getBinding;
         goto EXIT;
     }
     if (strcmp(f, "insert") == 0) {
         if (strlen(value) == 0) {
             goto EXIT;
         }
-        retval = &insertbinding;
+        retval = &insertBinding;
         goto EXIT;
     }
     if (strcmp(f, "delete") == 0){
-        retval = &deletebinding;
+        retval = &deleteBinding;
         goto EXIT;
     }
     goto EXIT;
 EXIT:
-    free(f);
+    if (f != NULL) {
+        free(f);
+    }
     initThread(retval, key, value, client, table, jobs_sem);
+    return;
 }
 
 void underlayLoop(int PORT, int WORKERS){

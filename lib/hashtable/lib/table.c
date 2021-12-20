@@ -1,5 +1,6 @@
 #include "../include/table.h"
 #include <string.h>
+#include <errno.h>
 
 struct Element {
     char * key;
@@ -77,7 +78,9 @@ int removeKey(struct LinkedList * list, char * key) {
     while (temp->next != NULL) {
         struct Element * elm = (struct Element *)temp->next->data;
         if (strcmp(elm->key, key) == 0) {
+            struct node * n = temp->next;
             temp->next = temp->next->next;
+            freeElement(n);
             return 0;
         }
         temp = temp->next;
@@ -120,18 +123,50 @@ int delete(struct HashTable * table, char * key) {
     return res;
 }
 
-void printTable(struct HashTable * table) {
+char* my_strcpy(char*dest, const char* src)
+{
+    while ((*dest = *src++))
+        ++dest;
+    return dest;
+}
+
+char * allBindings(struct HashTable * table) {
+    int sum = 0;
     for (int i = 0; i < table->size; i++) {
         struct node * temp = table->table[i]->n;
-        if (temp != NULL) {
-            printf("Table Index %d: ", i);
-
-            while (temp != NULL) {
-                struct Element * elm = (struct Element *)temp->data;
-                printf("{%s:%s} ", (char *)elm->key, (char *)elm->value);
-                temp = temp->next;
-            }
-            printf("\n");
+        while (temp != NULL) {
+            struct Element * elm = (struct Element *)temp->data;
+            sum += strlen(elm->key) + strlen(elm->value) + 2;
+            temp = temp->next;
         }
     }
+    if (sum<4) {
+        return NULL;
+    }
+
+    char * res;
+    if ((res = (char *)malloc(sum * sizeof(char)+1)) == NULL) {
+        fprintf(stderr, "Error: Failed to malloc. %s.\n", strerror(errno));
+        return NULL;
+    }
+    char * temp_str = res;
+    for (int i = 0; i < table->size; i++) {
+        struct node * temp = table->table[i]->n;
+        while (temp != NULL) {
+            struct Element * elm = (struct Element *)temp->data;
+            temp_str = my_strcpy(temp_str, elm->key);
+            temp_str = my_strcpy(temp_str, ":");
+            temp_str = my_strcpy(temp_str, elm->value);
+            temp_str = my_strcpy(temp_str, ",");
+            temp = temp->next;
+        }
+    }
+    res[sum-1] = '\0';
+    return res;
+}
+
+void printTable(struct HashTable * table) {
+    char * str = allBindings(table);
+    printf("%s\n", str);
+    free(str);
 }
