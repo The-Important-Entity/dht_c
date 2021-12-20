@@ -5,7 +5,12 @@
 git clone git@github.com:The-Important-Entity/dht_c.git
 cd dht_c
 make
-./main
+./main 2000 100
+```
+
+## Usage
+```
+./main <PORT> <NUM_WORKERS>
 ```
 
 ## TCP message format
