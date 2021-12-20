@@ -15,4 +15,5 @@ delete foo
 ```
 ## Constraints
 Max Key Length: 32
+
 Max Value Length: 32
