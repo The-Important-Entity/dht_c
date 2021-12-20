@@ -123,13 +123,6 @@ int delete(struct HashTable * table, char * key) {
     return res;
 }
 
-char* my_strcpy(char*dest, const char* src)
-{
-    while ((*dest = *src++))
-        ++dest;
-    return dest;
-}
-
 char * allBindings(struct HashTable * table) {
     int sum = 0;
     for (int i = 0; i < table->size; i++) {
@@ -154,10 +147,10 @@ char * allBindings(struct HashTable * table) {
         struct node * temp = table->table[i]->n;
         while (temp != NULL) {
             struct Element * elm = (struct Element *)temp->data;
-            temp_str = my_strcpy(temp_str, elm->key);
-            temp_str = my_strcpy(temp_str, ":");
-            temp_str = my_strcpy(temp_str, elm->value);
-            temp_str = my_strcpy(temp_str, ",");
+            temp_str = stpcpy(temp_str, elm->key);
+            temp_str = stpcpy(temp_str, " ");
+            temp_str = stpcpy(temp_str, elm->value);
+            temp_str = stpcpy(temp_str, ",");
             temp = temp->next;
         }
     }
