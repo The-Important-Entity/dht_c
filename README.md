@@ -1,6 +1,6 @@
 # dht_c
 
-# TCP message format
+## TCP message format
 Get Binding
 ```
 get foo
@@ -13,3 +13,6 @@ Delete Binding
 ```
 delete foo
 ```
+## Constraints
+Max Key Length: 32
+Max Value Length: 32
