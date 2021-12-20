@@ -3,7 +3,6 @@
 #include "../include/utils.h"
 #include "hashtable/include/table.h"
 
-#define WORKERS 100
 #define FMAX 16
 #define KEYMAX 32
 #define VALUEMAX 32
@@ -154,7 +153,7 @@ EXIT:
     initThread(retval, key, value, client, table, jobs_sem);
 }
 
-void underlayLoop(int PORT){
+void underlayLoop(int PORT, int WORKERS){
     server = initServer(PORT);
     if (server == NULL) {
         freeServer(server);

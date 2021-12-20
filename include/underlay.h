@@ -2,6 +2,6 @@
 #define UNDERLAY_H
 
 typedef void * (*fun_ptr)(void *);
-void underlayLoop(int PORT);
+void underlayLoop(int PORT, int WORKERS);
 
 #endif

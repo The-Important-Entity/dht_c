@@ -5,11 +5,11 @@
 #include "../include/overlay.h"
 #include "../include/underlay.h"
 
-void initDHT(){
+void initDHT(int PORT, int WORKERS){
     if (fork() == 0){
-        overlayLoop(2500);
+        overlayLoop(PORT, WORKERS);
     }
     else {
-        underlayLoop(2000);
+        underlayLoop(PORT, WORKERS);
     }
 }

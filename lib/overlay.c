@@ -2,6 +2,6 @@
 #include "../include/workers.h"
 #include "../include/utils.h"
 
-void overlayLoop(int PORT) {
+void overlayLoop(int PORT, int WORKERS) {
     return;
 }
