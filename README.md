@@ -10,7 +10,7 @@ make
 
 ## Usage
 ```
-
+./main <PORT> <NUM_WORKERS>
 ```
 
 ## TCP message format
