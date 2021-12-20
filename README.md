@@ -1,5 +1,13 @@
 # dht_c
 
+## Build
+```
+git clone git@github.com:The-Important-Entity/dht_c.git
+cd dht_c
+make
+./main
+```
+
 ## TCP message format
 Get Binding
 ```
